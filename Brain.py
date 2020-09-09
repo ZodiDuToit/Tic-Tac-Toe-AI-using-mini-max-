@@ -1,3 +1,5 @@
+from math import inf 
+
 class TicTacToeBrain:
     def __init__(self, board=["." for i in range(9)]):
         self.board = board
@@ -16,13 +18,13 @@ class TicTacToeBrain:
                            [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]:
 
             if self.createWinStatement(possitions, currentPlayer, board):
-                return currentPlayer
+                return True, currentPlayer
 
         for box in board:
             if box == ".":
-                return None
+                return False, None
 
-        return "draw"
+        return True, "tie"
 
     def showBoard(self, board):
         string = ""
@@ -51,42 +53,26 @@ class TicTacToeBrain:
 
         return cost, bestPossition
 
-    def miniMax(self, board, currentPlayer, depth, bestPosition=None):
-        winner = self.getWinner(board, self.getEnemyPlayer(currentPlayer))
+    def miniMax(self, board, currentPlayer, depth, alpha, beta):
+        win, winner = self.getWinner(board, currentPlayer)
 
-        if winner != None:
-            return self.returnPosition(winner, depth, bestPosition)
+        if win:
+            if winner == "tie":
+                return 0 - depth if currentPlayer == "x" else 0 + depth
 
-        if currentPlayer == "x":
-            best = -100
+            return 1 - depth if winner == "x" else 1 + depth  
 
-        else:
-            best = 100
+        bestEvaluation = -inf if currentPlayer == "x" else inf
 
-        for position in self.getOpenSpaces(board):
+        for child in self.getOpenSpaces(board):
+            evaluation = self.miniMax(board, self.getEnemyPlayer(currentPlayer), depth + 0.1, alpha, beta)
 
-            board[position] = currentPlayer
+            bestEvaluation = max(bestEvaluation, evaluation)
+            alpha = max(alpha, bestEvaluation)
 
-            print("player: ", currentPlayer)
-            self.showBoard(board)
-            print()
+            if beta <= alpha: break
+        return bestEvaluation    
 
-            cost, predicted = self.miniMax(board,
-                                           self.getEnemyPlayer(currentPlayer),
-                                           depth + 0.1, bestPosition)
-            print("parrent best: ", predicted)
-
-            self.board[position] = "."
-
-            if (currentPlayer == "x" and
-                (cost - depth > best)) or (currentPlayer == "o" and
-                                           (cost + depth < best)):
-                best = cost
-                bestPossition = position
-
-                print("found better move: ", bestPossition)
-
-        return best, bestPossition 
 
     def validMove(self, move):
         if move != None and 0 <= move <= 8 and self.board[move] == ".":
@@ -94,6 +80,7 @@ class TicTacToeBrain:
 
         print("invalid move \n")
         return False
+
 
     def game(self):
         self.showBoard(self.board)
@@ -118,7 +105,7 @@ class TicTacToeBrain:
                             print("that\'s not a number \n")
 
                 else:
-                    _, move = self.miniMax(self.board, player, 0)
+                    move = self.miniMax(self.board, player, 0)
 
                 self.board[move] = player
                 self.showBoard(self.board)
