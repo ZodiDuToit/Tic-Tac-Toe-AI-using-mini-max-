@@ -18,12 +18,14 @@ class TicTacToeBrain:
                            [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]:
 
             if self.createWinStatement(possitions, currentPlayer, board):
+                print(currentPlayer)
                 return True, currentPlayer
 
         for box in board:
             if box == ".":
                 return False, None
 
+        print("TIE")
         return True, "tie"
 
     def showBoard(self, board):
@@ -53,25 +55,45 @@ class TicTacToeBrain:
 
         return cost, bestPossition
 
-    def miniMax(self, board, currentPlayer, depth, alpha, beta):
+    def miniMax(self, board, currentPlayer, depth, alpha, beta, bestPosition):
         win, winner = self.getWinner(board, currentPlayer)
 
         if win:
             if winner == "tie":
-                return 0 - depth if currentPlayer == "x" else 0 + depth
+                return bestPosition, 0 - depth if currentPlayer == "x" else 0 + depth
 
-            return 1 - depth if winner == "x" else 1 + depth  
+            return bestPosition, 1 - depth if winner == "x" else 1 + depth  
 
         bestEvaluation = -inf if currentPlayer == "x" else inf
 
         for child in self.getOpenSpaces(board):
-            evaluation = self.miniMax(board, self.getEnemyPlayer(currentPlayer), depth + 0.1, alpha, beta)
+            board[child] = currentPlayer
 
-            bestEvaluation = max(bestEvaluation, evaluation)
+            bestPosition, evaluation = self.miniMax(
+
+                board,
+                self.getEnemyPlayer(currentPlayer),
+                depth + 0.1,
+                alpha,beta,
+                child
+                    )
+
+            self.showBoard(board)        
+
+            board[child] = "."
+
+            bestEva = bestEvaluation
+            print("bestEvaluation: ", bestEvaluation, "evaluation: ", evaluation)
+
+            bestEvaluation = max(bestEvaluation, evaluation) if currentPlayer == "x" else min(bestEvaluation, evaluation)
+
+            bestPosition = child if bestEva != bestEvaluation else bestPosition
+
             alpha = max(alpha, bestEvaluation)
 
+
             if beta <= alpha: break
-        return bestEvaluation    
+        return bestPosition, bestEvaluation    
 
 
     def validMove(self, move):
@@ -105,15 +127,16 @@ class TicTacToeBrain:
                             print("that\'s not a number \n")
 
                 else:
-                    move = self.miniMax(self.board, player, 0)
+                    move, _ = self.miniMax(self.board, player, 0, -inf, inf, None)
+                    print("move; ", move, "\n\n\n\n")
 
                 self.board[move] = player
                 self.showBoard(self.board)
 
                 print(player + "\'s move: ", move)
 
-                winner = self.getWinner(self.board, player)             
+                win, winner = self.getWinner(self.board, player)             
 
-                if winner:
+                if win:
                     print("game over, winner: ", winner)
                     return
