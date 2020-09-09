@@ -1,4 +1,5 @@
-from math import inf 
+from math import inf
+import time 
 
 class TicTacToeBrain:
     def __init__(self, board=["." for i in range(9)]):
@@ -127,8 +128,12 @@ class TicTacToeBrain:
                             print("that\'s not a number \n")
 
                 else:
+                    
+                    now = time.time()
+
                     move, _ = self.miniMax(self.board, player, 0, -inf, inf, None)
-                    print("move; ", move, "\n\n\n\n")
+                    print(time.time() - now)
+                    print("move; ", move)
 
                 self.board[move] = player
                 self.showBoard(self.board)
